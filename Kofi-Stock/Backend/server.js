@@ -12,19 +12,19 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
-// 🔧 CORS configurado correctamente para cualquier origen (teléfonos incluidos)
+// CORS para cualquier origen
 app.use(cors({ origin: "*", methods: ["GET", "POST"], allowedHeaders: ["Content-Type"] }));
 
 // Middleware
 app.use(fileUpload());
 app.use(express.json());
 
-// Servir la carpeta "public" correctamente
+// Servir carpeta public
 app.use(express.static(path.join(__dirname, "public")));
 
-// Variables de entorno (Render las toma automáticamente)
-const TOKEN = process.env.TELEGRAM_TOKEN || "8403372468:AAGRxMC8YSHZUV7ywvAWOpiPnj1qmp7U2gs";
-const CHAT_ID = process.env.TELEGRAM_CHAT_ID || "7939024042";
+// Variables de entorno (poner en Render)
+const TOKEN = process.env.TELEGRAM_TOKEN;
+const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
 // Función para enviar alerta a Telegram
 async function sendTelegramAlert(message) {
@@ -40,7 +40,7 @@ async function sendTelegramAlert(message) {
   }
 }
 
-// Ruta principal (sirve el index del Frontend)
+// Ruta principal
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
@@ -56,7 +56,8 @@ app.post("/upload", async (req, res) => {
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
     const data = xlsx.utils.sheet_to_json(sheet);
 
-    if (!data[0] || !("Producto" in data[0]) || !("Stock" in data[0]) || !("Mínimo" in data[0] || "Minimo" in data[0])) {
+    // ✅ Condición corregida para columnas
+    if (!data[0] || !("Producto" in data[0]) || !("Stock" in data[0]) || (!("Mínimo" in data[0]) && !("Minimo" in data[0]))) {
       return res.status(400).json({
         success: false,
         error: "El archivo debe tener las columnas: Producto, Stock y Mínimo.",
@@ -69,16 +70,25 @@ app.post("/upload", async (req, res) => {
       return !isNaN(stock) && !isNaN(minimo) && stock < minimo;
     });
 
-    for (const item of lowStock) {
+    // ✅ Enviar alertas en paralelo
+    await Promise.all(lowStock.map((item) => {
       const nombre = item.Producto || item.Product || "Producto desconocido";
       const stock = item.Stock ?? "N/A";
       const minimo = item.Mínimo || item.Minimo || "N/A";
-      await sendTelegramAlert(
+      return sendTelegramAlert(
         `⚠️ *Alerta de stock bajo*\nProducto: ${nombre}\nStock actual: ${stock}\nMínimo: ${minimo}`
       );
-    }
+    }));
 
     res.json({ success: true, lowStock });
   } catch (err) {
-    console.error("❌ Error al procesar
+    console.error("❌ Error al procesar Excel:", err.message);
+    res.status(500).json({ success: false, error: "Error al procesar el archivo." });
+  }
+});
+
+// Puerto
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
 
