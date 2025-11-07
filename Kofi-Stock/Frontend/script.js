@@ -16,7 +16,6 @@ uploadBtn.addEventListener("click", async () => {
   formData.append("file", file);
 
   try {
-    // ✅ Usamos ruta relativa para evitar errores en móviles y CORS
     const response = await fetch("/upload", {
       method: "POST",
       body: formData,
@@ -64,7 +63,7 @@ function renderTable(data) {
     Object.values(row).forEach((value) => {
       html += `<td>${value}</td>`;
     });
-    html += "</tr>`;
+    html += "</tr>"; // ✅ corregido
   });
 
   html += "</table>";
