@@ -3,13 +3,22 @@ import fileUpload from "express-fileupload";
 import xlsx from "xlsx";
 import axios from "axios";
 import cors from "cors";
+import path from "path";
+import { fileURLToPath } from "url";
+
+// Configuración base
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 app.use(cors());
 app.use(fileUpload());
 app.use(express.json());
 
-// Variables de entorno (pueden completarse luego en Render)
+// Servir la carpeta public
+app.use(express.static(path.join(__dirname, "public")));
+
+// Variables de entorno (Render las tomará desde Environment)
 const TOKEN = process.env.TELEGRAM_TOKEN || "8403372468:AAGRxMC8YSHZUV7ywvAWOpiPnj1qmp7U2gs";
 const CHAT_ID = process.env.TELEGRAM_CHAT_ID || "7939024042";
 
@@ -26,6 +35,11 @@ async function sendTelegramAlert(message) {
     console.error("❌ Error al enviar alerta:", error.message);
   }
 }
+
+// Ruta principal para servir la interfaz
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
 
 // Ruta para procesar archivo Excel
 app.post("/upload", async (req, res) => {
@@ -46,10 +60,12 @@ app.post("/upload", async (req, res) => {
       });
     }
 
-    // Buscar productos con stock bajo
-    const lowStock = data.filter(
-      (p) => p.Stock < (p.Mínimo || p.Minimo)
-    );
+    // Buscar productos con stock bajo (según los números del Excel)
+    const lowStock = data.filter((p) => {
+      const stock = parseFloat(p.Stock);
+      const minimo = parseFloat(p.Mínimo || p.Minimo);
+      return !isNaN(stock) && !isNaN(minimo) && stock < minimo;
+    });
 
     // Enviar alertas si hay productos con stock bajo
     for (const item of lowStock) {
@@ -68,5 +84,6 @@ app.post("/upload", async (req, res) => {
   }
 });
 
+// Puerto dinámico (Render usa PORT)
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => console.log(`🚀 Servidor Kofi-Stock activo en puerto ${PORT}`));
