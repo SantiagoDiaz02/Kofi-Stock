@@ -16,7 +16,8 @@ uploadBtn.addEventListener("click", async () => {
   formData.append("file", file);
 
   try {
-    const response = await fetch("http://localhost:4000/upload", {
+    // 🔁 CAMBIAMOS localhost por tu dominio Render:
+    const response = await fetch("https://kofi-stock.onrender.com/upload", {
       method: "POST",
       body: formData,
     });
