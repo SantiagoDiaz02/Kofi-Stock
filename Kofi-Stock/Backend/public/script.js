@@ -16,7 +16,8 @@ uploadBtn.addEventListener("click", async () => {
   formData.append("file", file);
 
   try {
-    const response = await fetch("http://localhost:4000/upload", {
+    // ✅ Usamos ruta relativa para evitar errores en móviles y CORS
+    const response = await fetch("/upload", {
       method: "POST",
       body: formData,
     });
@@ -30,6 +31,7 @@ uploadBtn.addEventListener("click", async () => {
     }
 
     renderTable(result.lowStock);
+
     if (result.lowStock.length > 0) {
       alert("⚠️ Se enviaron alertas de stock bajo a tu Telegram!");
     } else {
@@ -46,22 +48,23 @@ uploadBtn.addEventListener("click", async () => {
 
 function renderTable(data) {
   if (!data || data.length === 0) {
-    tableContainer.innerHTML = "<p>✅ Todo en orden. No hay productos por debajo del mínimo.</p>";
+    tableContainer.innerHTML =
+      "<p>✅ Todo en orden. No hay productos por debajo del mínimo.</p>";
     return;
   }
 
   let html = "<table><tr>";
-  Object.keys(data[0]).forEach(key => {
+  Object.keys(data[0]).forEach((key) => {
     html += `<th>${key}</th>`;
   });
   html += "</tr>";
 
-  data.forEach(row => {
+  data.forEach((row) => {
     html += `<tr class="low-stock">`;
-    Object.values(row).forEach(value => {
+    Object.values(row).forEach((value) => {
       html += `<td>${value}</td>`;
     });
-    html += "</tr>";
+    html += "</tr>`;
   });
 
   html += "</table>";
