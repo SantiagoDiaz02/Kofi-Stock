@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kofi Stock Manager</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>📦 Kofi Stock Manager</h1>
+    <p>Subí tu archivo Excel para revisar los productos con stock bajo:</p>
+    <input type="file" id="fileInput" accept=".xlsx,.xls">
+    <button id="uploadBtn">📤 Subir y verificar</button>
+
+    <div id="tableContainer"></div>
+    <p id="status"></p>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
